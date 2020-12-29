@@ -24,7 +24,7 @@ int32_t clamp_to_255_b(int32_t x) {
 #define GRIDDIM  512
 #define BLOCKDIM 256
 
-__global__ void clamp_benchmark_1_kernel(int4* x4, size_t n4, size_t repetition) {
+__global__ void clamp_arithmetic_logic_kernel(int4* x4, size_t n4, size_t repetition) {
     const int tid = threadIdx.x + blockIdx.x * BLOCKDIM;
     for(size_t k = 0; k < repetition; ++k) {            // 为了测试GPU的吞吐率，在线程内部进行重复
         for(size_t i = tid; i < n4; i += GRIDDIM * BLOCKDIM) {
@@ -38,7 +38,7 @@ __global__ void clamp_benchmark_1_kernel(int4* x4, size_t n4, size_t repetition)
     }
 }
 
-__global__ void clamp_benchmark_2_kernel(int4* x4, size_t n4, size_t repetition) {
+__global__ void clamp_compare_select_kernel(int4* x4, size_t n4, size_t repetition) {
     const int tid = threadIdx.x + blockIdx.x * BLOCKDIM;
     for(size_t k = 0; k < repetition; ++k) {
         for(size_t i = tid; i < n4; i += GRIDDIM * BLOCKDIM) {
@@ -52,20 +52,18 @@ __global__ void clamp_benchmark_2_kernel(int4* x4, size_t n4, size_t repetition)
     }
 }
 
-int32_t clamp_benchmark_1(int32_t* x, size_t n, size_t repetition) {
+void clamp_arithmetic_logic(int32_t* x, size_t n, size_t repetition) {
     int4* x4 = reinterpret_cast<int4*>(x);
     int n4 = n / 4;
     int grid_dim = std::min(GRIDDIM, (n4 - 1) / BLOCKDIM + 1);
-    clamp_benchmark_1_kernel<<<grid_dim, BLOCKDIM>>>(x4, n4, repetition);
+    clamp_arithmetic_logic_kernel<<<grid_dim, BLOCKDIM>>>(x4, n4, repetition);
     cudaDeviceSynchronize();
-    return 0;
 }
 
-int32_t clamp_benchmark_2(int32_t* x, size_t n, size_t repetition) {
+void clamp_compare_select(int32_t* x, size_t n, size_t repetition) {
     int4* x4 = reinterpret_cast<int4*>(x);
     int n4 = n / 4;
     int grid_dim = std::min(GRIDDIM, (n4 - 1) / BLOCKDIM + 1);
-    clamp_benchmark_2_kernel<<<grid_dim, BLOCKDIM>>>(x4, n4, repetition);
+    clamp_compare_select_kernel<<<grid_dim, BLOCKDIM>>>(x4, n4, repetition);
     cudaDeviceSynchronize();
-    return 0;
 }

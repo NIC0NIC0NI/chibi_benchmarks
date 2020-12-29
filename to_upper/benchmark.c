@@ -4,7 +4,7 @@
 
 #ifdef AVX512
 
-void to_upper_arithmitic(const char *src, char *dest, size_t len) {
+void to_upper_arithmetic_logic(const char *src, char *dest, size_t len) {
     const __m512i x7f = _mm512_set1_epi8(0x7f);
     const __m512i x05 = _mm512_set1_epi8(0x05);
     const __m512i x20 = _mm512_set1_epi8(0x20);
@@ -47,7 +47,7 @@ void to_upper_arithmitic(const char *src, char *dest, size_t len) {
     dest[len] = 0;
 }
 
-void to_upper_comparison(const char *src, char *dest, size_t len) {
+void to_upper_compare_select(const char *src, char *dest, size_t len) {
     const __m512i a = _mm512_set1_epi8('a');
     const __m512i z = _mm512_set1_epi8('z');
     const __m512i Aa = _mm512_set1_epi8('a' - 'A');
@@ -84,7 +84,7 @@ void to_upper_comparison(const char *src, char *dest, size_t len) {
 
 #elif defined(AVX2)
 
-void to_upper_arithmitic(const char *src, char *dest, size_t len) {
+void to_upper_arithmetic_logic(const char *src, char *dest, size_t len) {
     const __m256i x7f = _mm256_set1_epi8(0x7f);
     const __m256i x05 = _mm256_set1_epi8(0x05);
     const __m256i x20 = _mm256_set1_epi8(0x20);
@@ -127,7 +127,7 @@ void to_upper_arithmitic(const char *src, char *dest, size_t len) {
     dest[len] = 0;
 }
 
-void to_upper_comparison(const char *src, char *dest, size_t len) {
+void to_upper_compare_select(const char *src, char *dest, size_t len) {
     const __m256i a = _mm256_set1_epi8('a');
     const __m256i z = _mm256_set1_epi8('z');
     const __m256i Aa = _mm256_set1_epi8('a' - 'A');
@@ -167,9 +167,9 @@ void to_upper_comparison(const char *src, char *dest, size_t len) {
     dest[len] = 0;
 }
 
-#else // SSE4
+#elif defined(SSE)
 
-void to_upper_arithmitic(const char *src, char *dest, size_t len) {
+void to_upper_arithmetic_logic(const char *src, char *dest, size_t len) {
     const __m128i x7f = _mm_set1_epi8(0x7f);
     const __m128i x05 = _mm_set1_epi8(0x05);
     const __m128i x20 = _mm_set1_epi8(0x20);
@@ -212,7 +212,7 @@ void to_upper_arithmitic(const char *src, char *dest, size_t len) {
     dest[len] = 0;
 }
 
-void to_upper_comparison(const char *src, char *dest, size_t len) {
+void to_upper_compare_select(const char *src, char *dest, size_t len) {
     const __m128i a = _mm_set1_epi8('a');
     const __m128i z = _mm_set1_epi8('z');
     const __m128i Aa = _mm_set1_epi8('a' - 'A');
@@ -251,6 +251,35 @@ void to_upper_comparison(const char *src, char *dest, size_t len) {
     }
     dest[len] = 0;
 }
+
+#else
+
+void to_upper_arithmetic_logic(const char *src, char *dest, size_t len) {
+    size_t i = 0;
+    if(len >= 8) {
+        for (; i < len - 7; i += 8) {
+            uint64_t src_uint = *((uint64_t*)&src[i]) & 0x7f7f7f7f7f7f7f7f;
+            uint64_t a = (src_uint + 0x0505050505050505) & (src_uint + 0x7f7f7f7f7f7f7f7f);
+            uint64_t b = a & (a >> 1) & 0x2020202020202020;
+            *((uint64_t*)&src[i]) = src_uint - b;
+        }
+    }
+    for (; i < len; i++) {
+        char src_char = src[i] & 0x7f;
+        char a = (src_char + 0x05) & (src_char + 0x7f);
+        char b = a & (a >> 1) & 0x20;
+        dest[i] = src_char - b;
+    }
+    dest[len] = 0;
+}
+
+void to_upper_compare_select(const char *src, char *dest, size_t len) {
+    for (size_t i = 0; i < len; i++) {
+        dest[i] = (src[i] >= 'a' && src[i] <= 'z') ? (src[i] - 'a' + 'A') : src[i];
+    }
+    dest[len] = 0;
+}
+
 #endif
 
 static char lowercase_to_uppercase_map[256];

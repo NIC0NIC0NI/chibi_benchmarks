@@ -5,7 +5,7 @@ CC = gcc
 AVX512OPT = -DAVX512 -mavx512f -mavx512bw
 AVX2OPT = -DAVX2 -mavx2
 SSEOPT = -DSSE -msse4
-OPT = -O2 
+OPT = -O2 -std=c11
 
 benchmark_avx512:benchmark.c main.c
 	$(CC) $(OPT) $(AVX512OPT) $^ -o $@

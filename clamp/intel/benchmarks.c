@@ -2,7 +2,7 @@
 #include <immintrin.h>
 
 #ifdef AVX512
-int32_t clamp_arithmetic(int32_t* x, size_t n) {
+void clamp_arithmetic_logic(int32_t* x, size_t n) {
     const __m512i vec0 = _mm512_setzero_epi32();
     const __m512i vec255 = _mm512_set1_epi32(255);
     size_t j = 0;
@@ -39,11 +39,10 @@ int32_t clamp_arithmetic(int32_t* x, size_t n) {
         int32_t y0 = ((-x0) >> 31) & x0;
         int32_t z0 = (((255 - y0) >> 31) | y0) & 255;
         x[j] = z0;
-    }
-    return 0;
+    }   
 }
 
-int32_t clamp_comparison(int32_t* x, size_t n) {
+void clamp_compare_select(int32_t* x, size_t n) {
     const __m512i vec0 = _mm512_setzero_epi32();
     const __m512i vec255 = _mm512_set1_epi32(255);
     size_t j = 0;
@@ -81,11 +80,10 @@ int32_t clamp_comparison(int32_t* x, size_t n) {
         int32_t z0 = (y0 <= 255) ? y0 : 255;
         x[j] = z0;
     }
-    return 0;
 }
 
 #elif defined(AVX2)
-int32_t clamp_arithmetic(int32_t* x, size_t n) {
+void clamp_arithmetic_logic(int32_t* x, size_t n) {
     const __m256i vec0 = _mm256_setzero_si256();
     const __m256i vec255 = _mm256_set1_epi32(255);
     size_t j = 0;
@@ -123,10 +121,9 @@ int32_t clamp_arithmetic(int32_t* x, size_t n) {
         int32_t z0 = (((255 - y0) >> 31) | y0) & 255;
         x[j] = z0;
     }
-    return 0;
 }
 
-int32_t clamp_comparison(int32_t* x, size_t n) {
+void clamp_compare_select(int32_t* x, size_t n) {
     const __m256i vec0 = _mm256_setzero_si256();
     const __m256i vec255 = _mm256_set1_epi32(255);
     size_t j = 0;
@@ -164,12 +161,11 @@ int32_t clamp_comparison(int32_t* x, size_t n) {
         int32_t z0 = (y0 <= 255) ? y0 : 255;
         x[j] = z0;
     }
-    return 0;
 }
 
-#else // SSE4
+#elif defined(SSE)
 
-int32_t clamp_arithmetic(int32_t* x, size_t n) {
+void clamp_arithmetic_logic(int32_t* x, size_t n) {
     const __m128i vec0 = _mm_setzero_si128();
     const __m128i vec255 = _mm_set1_epi32(255);
     size_t j = 0;
@@ -207,10 +203,9 @@ int32_t clamp_arithmetic(int32_t* x, size_t n) {
         int32_t z0 = (((255 - y0) >> 31) | y0) & 255;
         x[j] = z0;
     }
-    return 0;
 }
 
-int32_t clamp_comparison(int32_t* x, size_t n) {
+void clamp_compare_select(int32_t* x, size_t n) {
     const __m128i vec0 = _mm_setzero_si128();
     const __m128i vec255 = _mm_set1_epi32(255);
     size_t j = 0;
@@ -248,7 +243,27 @@ int32_t clamp_comparison(int32_t* x, size_t n) {
         int32_t z0 = (y0 <= 255) ? y0 : 255;
         x[j] = z0;
     }
-    return 0;
 }
+
+#else
+
+void clamp_arithmetic_logic(int32_t* x, size_t n) {
+    for(size_t j = 0; j < n; ++j) {
+        int32_t x0 = x[j];
+        int32_t y0 = ((-x0) >> 31) & x0;
+        int32_t z0 = (((255 - y0) >> 31) | y0) & 255;
+        x[j] = z0;
+    }
+}
+
+void clamp_compare_select(int32_t* x, size_t n) {
+    for(size_t j = 0; j < n; ++j) {
+        int32_t x0 = x[j];
+        int32_t y0 = (x0 >= 0) ? x0 : 0;
+        int32_t z0 = (y0 <= 255) ? y0 : 255;
+        x[j] = z0;
+    }
+}
+
 
 #endif

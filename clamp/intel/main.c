@@ -6,8 +6,8 @@
 #include<sys/time.h>
 #include<immintrin.h>
 
-int32_t clamp_arithmetic(int32_t* x, size_t n);
-int32_t clamp_comparison(int32_t* x, size_t n);
+void clamp_arithmetic_logic(int32_t* x, size_t n);
+void clamp_compare_select(int32_t* x, size_t n);
 
 #define REPETITION 1000000ull
 #define SIZE       (4321ull)
@@ -24,9 +24,9 @@ int main() {
 
     // 热 cache
     memcpy(ref, xx, sizeof(int32_t) * SIZE);
-    clamp_arithmetic(ref, SIZE);
+    clamp_arithmetic_logic(ref, SIZE);
     memcpy(yy, xx, sizeof(int32_t) * SIZE);
-    clamp_comparison(yy, SIZE);
+    clamp_compare_select(yy, SIZE);
     assert(memcmp(yy, ref, sizeof(int32_t) * SIZE) == 0);
     _mm_free(ref);
 
@@ -35,7 +35,7 @@ int main() {
 
     gettimeofday(&start, NULL);
     for(size_t i = 0; i < REPETITION; ++i) {
-        clamp_arithmetic(yy, SIZE);
+        clamp_arithmetic_logic(yy, SIZE);
     }
     gettimeofday(&stop, NULL);
 
@@ -46,16 +46,18 @@ int main() {
 
     gettimeofday(&start, NULL);
     for(size_t i = 0; i < REPETITION; ++i) {
-        clamp_comparison(yy, SIZE);
+        clamp_compare_select(yy, SIZE);
     }
     gettimeofday(&stop, NULL);
 
     t2 = (stop.tv_sec - start.tv_sec) * 1e3 + (stop.tv_usec - start.tv_usec) * 1e-3;
-
-    printf("Clamp by arithmetics:\t%8.3f ms\nClamp by comparison:\t%8.3f ms\n", t1, t2);
-    printf("Array size:\t%lu\nRepetitions:\t%lu\n", SIZE, REPETITION);
-
     _mm_free(xx);
     _mm_free(yy);
+
+    printf("Clamp by arithmetics and logic:    %.3f ms\n", t1);
+    printf("Clamp by comparison and selection: %.3f ms\n", t2);
+    printf("Array size:                        %llu\n", SIZE);
+    printf("Repetitions:                       %llu\n", REPETITION);
+
     return 0;
 }

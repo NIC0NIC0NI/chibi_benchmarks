@@ -12,7 +12,7 @@ void to_upper_arithmetic_logic(const char *src, char *dest, size_t len);
 void to_upper_lookup_table(const char *src, char *dest, size_t len);
 
 int main() {
-    int size = 3415, rep = 1000000;
+    int size = 3416, rep = 1000000;
     char *src = (char *) _mm_malloc(size, 64);
     char *dest = (char *) _mm_malloc(size, 64);
     char *ref = (char *) _mm_malloc(size, 64);
@@ -65,6 +65,8 @@ int main() {
     
     t_ms = (tv_end.tv_sec - tv_start.tv_sec) * 1e3 + (tv_end.tv_usec - tv_start.tv_usec) * 1e-3;
     printf("To upper by comparison and selection: %.3lf ms\n", t_ms);
+    printf("String length:                        %ld\n", size - 1);
+    printf("Repetitions:                          %ld\n", rep);
 
     _mm_free(src);
     _mm_free(dest);

@@ -12,14 +12,14 @@ void to_upper_arithmetic_logic(const char *src, char *dest, size_t len);
 void to_upper_lookup_table(const char *src, char *dest, size_t len);
 
 int main() {
-    int size = 3416, rep = 1000000;
+    int size = 3415, rep = 1000000;
     char *src = (char *) _mm_malloc(size, 64);
     char *dest = (char *) _mm_malloc(size, 64);
     char *ref = (char *) _mm_malloc(size, 64);
     for (unsigned int i = 0; i < size - 1; i++) {
         src[i] = (i*29327)%93 + '!';
     }
-    src[size] = 0;
+    src[size - 1] = 0;
     init_table();
 
     struct timeval tv_start;

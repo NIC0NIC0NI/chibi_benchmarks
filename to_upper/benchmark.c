@@ -261,7 +261,7 @@ void to_upper_arithmetic_logic(const char *src, char *dest, size_t len) {
             uint64_t src_uint = *((uint64_t*)&src[i]) & 0x7f7f7f7f7f7f7f7f;
             uint64_t a = (src_uint + 0x0505050505050505) & (src_uint + 0x7f7f7f7f7f7f7f7f);
             uint64_t b = a & (a >> 1) & 0x2020202020202020;
-            *((uint64_t*)&src[i]) = src_uint - b;
+            *((uint64_t*)&dest[i]) = src_uint - b;
         }
     }
     for (; i < len; i++) {
